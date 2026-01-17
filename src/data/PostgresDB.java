@@ -1,6 +1,6 @@
-package src.com.company.data.src.com.company.data;
+package data;
 
-import com.company.data.src.com.company.data.interfaces.IDB;
+import data.interfaces.IDB;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

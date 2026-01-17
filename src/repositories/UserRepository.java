@@ -1,8 +1,8 @@
-package src.com.company.data.src.com.company.repositories;
+package repositories;
 
-import com.company.data.src.com.company.data.interfaces.IDB;
-import com.company.data.src.com.company.models.User;
-import com.company.data.src.com.company.repositories.interfaces.IUserRepository;
+import data.interfaces.IDB;
+import models.User;
+import repositories.interfaces.IUserRepository;
 
 import java.sql.*;
 import java.util.ArrayList;

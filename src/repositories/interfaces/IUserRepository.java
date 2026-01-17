@@ -1,6 +1,6 @@
-package src.com.company.repositories.interfaces;
+package repositories.interfaces;
 
-import com.company.models.User;
+import models.User;
 
 import java.util.List;
 
