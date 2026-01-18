@@ -1,25 +1,27 @@
+package service;
 
-
+import controllers.LibraryController;
 import controllers.UserController;
-import controllers.interfaces.IUserController;
-import data.PostgresDB;
-import data.interfaces.IDB;
-import repositories.UserRepository;
-import repositories.interfaces.IUserRepository;
+
+import java.util.Scanner;
 
 public class Main {
-
     public static void main(String[] args) {
-        // Here you specify which DB and UserRepository to use
-        // And changing DB should not affect to whole code
-        IDB db = new PostgresDB("jdbc:postgresql://localhost:5432", "postgres", "0000", "somedb");
-        IUserRepository repo = new UserRepository(db);
-        IUserController controller = new UserController(repo);
 
-        MyApplication app = new MyApplication(controller);
+        Scanner scanner = new Scanner(System.in);
+        LibraryController libraryController = new LibraryController();
+        UserController userController = new UserController();
 
-        app.start();
+        System.out.println("Enter username:");
+        String username = scanner.nextLine();
+        userController.addUser(username);
 
-        db.close();
+        System.out.println("Enter book title:");
+        String title = scanner.nextLine();
+
+        System.out.println("Enter book genre:");
+        String genre = scanner.nextLine();
+
+        libraryController.addBook(title, genre);
     }
 }
