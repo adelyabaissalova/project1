@@ -1,27 +1,23 @@
-package service;
 
-import controllers.LibraryController;
-import controllers.UserController;
 
-import java.util.Scanner;
+import controller.BookController;
+import controller.interfaces.IBookController;
+import data.DatabaseConnection;
+import data.interfaces.IDB;
+import repository.BookRepository;
+import repository.interfaces.IBookRepository;
 
 public class Main {
+
     public static void main(String[] args) {
 
-        Scanner scanner = new Scanner(System.in);
-        LibraryController libraryController = new LibraryController();
-        UserController userController = new UserController();
+        IDB db = new DatabaseConnection("jdbc:postgresql://localhost:5432", "postgres", "2506", "bookdb");
 
-        System.out.println("Enter username:");
-        String username = scanner.nextLine();
-        userController.addUser(username);
+        IBookRepository repo = new BookRepository(db);
+        IBookController controller = new BookController(repo);
+        MyApplication app = new MyApplication(controller);
 
-        System.out.println("Enter book title:");
-        String title = scanner.nextLine();
-
-        System.out.println("Enter book genre:");
-        String genre = scanner.nextLine();
-
-        libraryController.addBook(title, genre);
+        app.start();
+        db.close();
     }
 }
