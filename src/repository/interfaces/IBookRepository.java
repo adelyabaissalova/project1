@@ -10,4 +10,5 @@ public interface IBookRepository {
     List<Book> getAllBooks();
 
     boolean updateStatus(int id, String status);
+    Book getBookById(int id);
 }

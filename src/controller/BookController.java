@@ -18,7 +18,6 @@ public class BookController implements IBookController {
         return created ? "Book is saved." : "Error occured.";
     }
 
-
     @Override
     public String showAll() {
         var books = repo.getAllBooks();
@@ -30,6 +29,15 @@ public class BookController implements IBookController {
                     .append(b.getStatus()).append("\n");
         }
         return sb.toString();
+    }
+
+    @Override
+    public String getById(int id) {
+        Book b = repo.getBookById(id);
+        if (b == null) {
+            return "Book not found.";
+        }
+        return b.getId() + " | " + b.getTitle() + " | " + b.getGenre() + " | " + b.getStatus();
     }
 
     @Override

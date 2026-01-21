@@ -4,7 +4,10 @@ import data.interfaces.IDB;
 import models.Book;
 import repository.interfaces.IBookRepository;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +28,9 @@ public class BookRepository implements IBookRepository {
             stmt.setString(1, book.getTitle());
             stmt.setString(2, book.getGenre());
             stmt.setString(3, book.getStatus());
-            stmt.execute();
-            return true;
+
+            // лучше executeUpdate (возвращает сколько строк добавилось)
+            return stmt.executeUpdate() > 0;
 
         } catch (Exception e) {
             System.out.println("Error saving: " + e.getMessage());
@@ -34,10 +38,10 @@ public class BookRepository implements IBookRepository {
         }
     }
 
-
     @Override
     public List<Book> getAllBooks() {
-        String sql = "SELECT * FROM books";
+        // лучше явно перечислить колонки
+        String sql = "SELECT id, title, genre, status FROM books ORDER BY id";
         List<Book> books = new ArrayList<>();
 
         try (Connection conn = db.getConnection();
@@ -46,10 +50,10 @@ public class BookRepository implements IBookRepository {
 
             while (rs.next()) {
                 books.add(new Book(
-                        rs.getInt("ID"),
-                        rs.getString("Title"),
-                        rs.getString("Genre"),
-                        rs.getString("Status")
+                        rs.getInt("id"),
+                        rs.getString("title"),
+                        rs.getString("genre"),
+                        rs.getString("status")
                 ));
             }
 
@@ -69,12 +73,40 @@ public class BookRepository implements IBookRepository {
 
             stmt.setString(1, status);
             stmt.setInt(2, id);
-            stmt.execute();
-            return true;
+
+            return stmt.executeUpdate() > 0; // true если реально обновило
 
         } catch (Exception e) {
-            System.out.println("Error updatе: " + e.getMessage());
+            System.out.println("Error update: " + e.getMessage());
             return false;
         }
+    }
+
+    // ✅ ДОБАВЛЕНО: чтобы не было красным (если интерфейс требует этот метод)
+    @Override
+    public Book getBookById(int id) {
+        String sql = "SELECT id, title, genre, status FROM books WHERE id = ?";
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Book(
+                            rs.getInt("id"),
+                            rs.getString("title"),
+                            rs.getString("genre"),
+                            rs.getString("status")
+                    );
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error get by id: " + e.getMessage());
+        }
+
+        return null; // если не найдено
     }
 }
