@@ -46,10 +46,10 @@ public class BookRepository implements IBookRepository {
 
             while (rs.next()) {
                 books.add(new Book(
-                        rs.getInt("id"),
-                        rs.getString("title"),
-                        rs.getString("genre"),
-                        rs.getString("status")
+                        rs.getInt("ID"),
+                        rs.getString("Title"),
+                        rs.getString("Genre"),
+                        rs.getString("Status")
                 ));
             }
 
