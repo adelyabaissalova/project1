@@ -73,7 +73,7 @@ public class BookRepository implements IBookRepository {
             return true;
 
         } catch (Exception e) {
-            System.out.println("Error updating: " + e.getMessage());
+            System.out.println("Error updatе: " + e.getMessage());
             return false;
         }
     }
