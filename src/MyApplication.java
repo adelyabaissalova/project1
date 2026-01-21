@@ -13,7 +13,7 @@ public class MyApplication {
     public void start() {
         while (true) {
             System.out.println("\n=== Online library ===");
-            System.out.println("1. Add book");
+            System.out.println("1. Include book");
             System.out.println("2. Demonstrate all books");
             System.out.println("3. Mark as read");
             System.out.println("4. Mark as not read");
