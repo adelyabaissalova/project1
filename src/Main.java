@@ -16,7 +16,6 @@ public class Main {
         IBookRepository repo = new BookRepository(db);
         IBookController controller = new BookController(repo);
         MyApplication app = new MyApplication(controller);
-
         app.start();
         db.close();
     }
