@@ -11,7 +11,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        IDB db = new DatabaseConnection("jdbc:postgresql://localhost:5432", "postgres", "2506", "bookdb");
+        IDB db = new DatabaseConnection("jdbc:postgresql://localhost:5432", "postgres", "0000", "bookdb");
 
         IBookRepository repo = new BookRepository(db);
         IBookController controller = new BookController(repo);
