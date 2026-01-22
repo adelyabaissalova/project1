@@ -5,10 +5,8 @@ import data.interfaces.IDB;
 import repository.BookRepository;
 import repository.interfaces.IBookRepository;
 
-
 public class Main {
     public static void main(String[] args) {
-
         IDB db = new DatabaseConnection(
                 "jdbc:postgresql://localhost:5432",
                 "postgres",

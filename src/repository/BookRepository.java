@@ -4,10 +4,7 @@ import data.interfaces.IDB;
 import models.Book;
 import repository.interfaces.IBookRepository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +17,8 @@ public class BookRepository implements IBookRepository {
 
     @Override
     public boolean createBook(Book book) {
-        String sql = "INSERT INTO books (title, genre, status) VALUES (?, ?, ?)";
+
+        String sql = "INSERT INTO books (title, genre, status, author_id) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -29,8 +27,12 @@ public class BookRepository implements IBookRepository {
             stmt.setString(2, book.getGenre());
             stmt.setString(3, book.getStatus());
 
-            // лучше executeUpdate (возвращает сколько строк добавилось)
-            return stmt.executeUpdate() > 0;
+            Integer authorId = book.getAuthorId();
+            if (authorId == null) stmt.setNull(4, Types.INTEGER);
+            else stmt.setInt(4, authorId);
+
+            stmt.executeUpdate();
+            return true;
 
         } catch (Exception e) {
             System.out.println("Error saving: " + e.getMessage());
@@ -40,8 +42,13 @@ public class BookRepository implements IBookRepository {
 
     @Override
     public List<Book> getAllBooks() {
-        // лучше явно перечислить колонки
-        String sql = "SELECT id, title, genre, status FROM books ORDER BY id";
+        String sql =
+                "SELECT b.id, b.title, b.genre, b.status, b.author_id, " +
+                        "COALESCE(a.full_name, 'Unknown') AS author_name " +
+                        "FROM books b " +
+                        "LEFT JOIN authors a ON a.id = b.author_id " +
+                        "ORDER BY b.id";
+
         List<Book> books = new ArrayList<>();
 
         try (Connection conn = db.getConnection();
@@ -53,7 +60,9 @@ public class BookRepository implements IBookRepository {
                         rs.getInt("id"),
                         rs.getString("title"),
                         rs.getString("genre"),
-                        rs.getString("status")
+                        rs.getString("status"),
+                        (Integer) rs.getObject("author_id"),
+                        rs.getString("author_name")
                 ));
             }
 
@@ -73,8 +82,7 @@ public class BookRepository implements IBookRepository {
 
             stmt.setString(1, status);
             stmt.setInt(2, id);
-
-            return stmt.executeUpdate() > 0; // true если реально обновило
+            return stmt.executeUpdate() > 0;
 
         } catch (Exception e) {
             System.out.println("Error update: " + e.getMessage());
@@ -82,10 +90,14 @@ public class BookRepository implements IBookRepository {
         }
     }
 
-    // ✅ ДОБАВЛЕНО: чтобы не было красным (если интерфейс требует этот метод)
     @Override
     public Book getBookById(int id) {
-        String sql = "SELECT id, title, genre, status FROM books WHERE id = ?";
+        String sql =
+                "SELECT b.id, b.title, b.genre, b.status, b.author_id, " +
+                        "COALESCE(a.full_name, 'Unknown') AS author_name " +
+                        "FROM books b " +
+                        "LEFT JOIN authors a ON a.id = b.author_id " +
+                        "WHERE b.id = ?";
 
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -98,15 +110,17 @@ public class BookRepository implements IBookRepository {
                             rs.getInt("id"),
                             rs.getString("title"),
                             rs.getString("genre"),
-                            rs.getString("status")
+                            rs.getString("status"),
+                            (Integer) rs.getObject("author_id"),
+                            rs.getString("author_name")
                     );
                 }
             }
 
         } catch (Exception e) {
-            System.out.println("Error get by id: " + e.getMessage());
+            System.out.println("Error retrieving by id: " + e.getMessage());
         }
 
-        return null; // если не найдено
+        return null;
     }
 }
