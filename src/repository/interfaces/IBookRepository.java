@@ -9,4 +9,10 @@ public interface IBookRepository {
     boolean updateStatus(int id, String status);
 
     Book getBookById(int id);
+
+    boolean borrowBook(int bookId, String borrowerName);
+    boolean returnBook(int bookId);
+
+    boolean isBookBorrowed(int bookId);
+    boolean bookExists(int bookId);
 }

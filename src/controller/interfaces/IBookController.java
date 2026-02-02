@@ -7,4 +7,7 @@ public interface IBookController {
     String markNotRead(int id);
 
     String getById(int id);
+
+    String borrowBook(int bookId, String borrowerName);
+    String returnBook(int bookId);
 }
