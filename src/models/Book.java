@@ -13,7 +13,7 @@ public class Book {
     private LocalDate dueDate;
     private Boolean returned;
 
-    public Book() {}
+    public Book(int id, String title, String genre, String status) {}
     public Book(String title, String genre, Integer authorId) {
         this.title = title;
         this.genre = genre;
