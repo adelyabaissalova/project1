@@ -1,6 +1,9 @@
+
 package repository.interfaces;
 
 import models.Book;
+import models.dto.FullBookDescription;
+
 import java.util.List;
 
 public interface IBookRepository {
@@ -15,4 +18,8 @@ public interface IBookRepository {
 
     boolean isBookBorrowed(int bookId);
     boolean bookExists(int bookId);
+
+    FullBookDescription getFullBookDescription(int bookId);
+
+    List<Book> getBooksByGenre(String genre);
 }
