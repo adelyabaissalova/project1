@@ -2,6 +2,7 @@ package repository;
 
 import data.interfaces.IDB;
 import models.Book;
+import models.dto.FullBookDescription;
 import repository.interfaces.IBookRepository;
 
 import java.sql.*;
@@ -38,6 +39,7 @@ public class BookRepository implements IBookRepository {
         }
     }
 
+    // NOTE: keep your existing JOIN with authors + loans
     private static final String FULL_SELECT =
             "SELECT b.id, b.title, b.genre, b.status, b.author_id, " +
                     "COALESCE(a.full_name, 'Unknown') AS author_name, " +
@@ -60,7 +62,24 @@ public class BookRepository implements IBookRepository {
         } catch (Exception e) {
             System.out.println("Error retrieving: " + e.getMessage());
         }
+        return books;
+    }
 
+    @Override
+    public List<Book> getBooksByGenre(String genre) {
+        String sql = FULL_SELECT + "WHERE LOWER(b.genre) = LOWER(?) ORDER BY b.id";
+        List<Book> books = new ArrayList<>();
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, genre);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) books.add(mapRow(rs));
+            }
+        } catch (Exception e) {
+            System.out.println("Error getBooksByGenre: " + e.getMessage());
+        }
         return books;
     }
 
@@ -187,6 +206,47 @@ public class BookRepository implements IBookRepository {
         } catch (Exception e) {
             System.out.println("Error return: " + e.getMessage());
             return false;
+        }
+    }
+
+    @Override
+    public FullBookDescription getFullBookDescription(int bookId) {
+        String sql =
+                "SELECT b.id, b.title, b.genre, b.status, b.author_id, " +
+                        "COALESCE(a.full_name, 'Unknown') AS author_name, " +
+                        "l.borrower_name, l.due_date, l.returned " +
+                        "FROM books b " +
+                        "LEFT JOIN authors a ON a.id = b.author_id " +
+                        "LEFT JOIN loans l ON l.book_id = b.id AND l.returned = FALSE " +
+                        "WHERE b.id = ?";
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, bookId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) return null;
+
+                FullBookDescription d = new FullBookDescription();
+                d.setBookId(rs.getInt("id"));
+                d.setTitle(rs.getString("title"));
+                d.setGenre(rs.getString("genre"));
+                d.setStatus(rs.getString("status"));
+                d.setAuthorId((Integer) rs.getObject("author_id"));
+                d.setAuthorName(rs.getString("author_name"));
+                d.setBorrowerName(rs.getString("borrower_name"));
+
+                Date due = rs.getDate("due_date");
+                d.setDueDate(due == null ? null : due.toLocalDate());
+                d.setReturned((Boolean) rs.getObject("returned"));
+
+                return d;
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error getFullBookDescription: " + e.getMessage());
+            return null;
         }
     }
 }

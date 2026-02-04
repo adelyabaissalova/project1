@@ -10,4 +10,10 @@ public interface IBookController {
 
     String borrowBook(int bookId, String borrowerName);
     String returnBook(int bookId);
+
+    String getFullDescription(int bookId);
+
+    String showByGenre(String genre);
+
+    String showReadSortedByTitle();
 }
