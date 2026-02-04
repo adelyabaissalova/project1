@@ -18,4 +18,12 @@ public class SessionContext {
     public static boolean isLoggedIn() {
         return currentUser != null;
     }
+
+    public static String getDisplayName() {
+        return null;
+    }
+
+    public static void setDisplayName(String name) {
+
+    }
 }
