@@ -39,7 +39,10 @@ public class MyApplication {
         }
     }
 
-    private int adminMenu() {;
+
+    private int adminMenu() {
+        System.out.println("\n=== ONLINE LIBRARY ===");
+        System.out.println("Logged in as " + SessionContext.getCurrentUser().getUsername());
         System.out.println("1. Find book by ID");
         System.out.println("2. Show all books");
         System.out.println("3. Mark as read");
@@ -47,42 +50,39 @@ public class MyApplication {
         System.out.println("5. Add book");
         System.out.println("6. Borrow book");
         System.out.println("7. Return book");
-        System.out.println("8. Show books by genre ");
-        System.out.println("9. Show READ books sorted by title ");
-        System.out.println("10. Get FULL book description ");
-        System.out.println("11. Logout");
         System.out.println("0. Exit");
         System.out.print("Choose: ");
         return readInt();
     }
 
     private int librarianMenu() {
+        System.out.println("\n=== ONLINE LIBRARY ===");
+        System.out.println("Logged in as " + SessionContext.getCurrentUser().getUsername());
         System.out.println("1. Find book by ID");
         System.out.println("2. Show all books");
         System.out.println("3. Mark as read");
         System.out.println("4. Mark as not read");
         System.out.println("6. Borrow book");
         System.out.println("7. Return book");
-        System.out.println("8. Show books by genre ");
-        System.out.println("10. Get FULL book description ");
-        System.out.println("11. Logout");
+        System.out.println("0. Exit");
+        System.out.print("Choose: ");
+        return readInt();
+    }
+    private int userMenu() {
+        System.out.println("\n=== ONLINE LIBRARY ===");
+        String name = SessionContext.getDisplayName();
+        if (name != null && !name.isBlank()) {
+            System.out.println("Welcome, " + name);
+        }
+        System.out.println("1. Find book by ID");
+        System.out.println("2. Show all books");
+        System.out.println("6. Borrow book");
+        System.out.println("7. Return book");
         System.out.println("0. Exit");
         System.out.print("Choose: ");
         return readInt();
     }
 
-    private int userMenu() {
-        System.out.println("1. Find book by ID");
-        System.out.println("2. Show all books");
-        System.out.println("6. Borrow book");
-        System.out.println("7. Return book");
-        System.out.println("8. Show books by genre ");
-        System.out.println("10. Get FULL book description ");
-        System.out.println("11. Logout");
-        System.out.println("0. Exit");
-        System.out.print("Choose: ");
-        return readInt();
-    }
 
     private boolean handleAdmin(int choice) {
         switch (choice) {
@@ -93,10 +93,6 @@ public class MyApplication {
             case 5 -> addBook();
             case 6 -> borrowBook();
             case 7 -> returnBook();
-            case 8 -> showByGenre();
-            case 9 -> System.out.println(controller.showReadSortedByTitle());
-            case 10 -> fullDescription();
-            case 11 -> login();
             case 0 -> { System.out.println("Goodbye."); return true; }
             default -> System.out.println("Unknown option.");
         }
@@ -111,9 +107,6 @@ public class MyApplication {
             case 4 -> markNotRead();
             case 6 -> borrowBook();
             case 7 -> returnBook();
-            case 8 -> showByGenre();
-            case 10 -> fullDescription();
-            case 11 -> login();
             case 0 -> { System.out.println("Goodbye."); return true; }
             default -> System.out.println("Unknown option.");
         }
@@ -124,16 +117,14 @@ public class MyApplication {
         switch (choice) {
             case 1 -> findById();
             case 2 -> System.out.println(controller.showAll());
-            case 6 -> borrowBook();
+            case 6 -> borrowBookUserAutoName();
             case 7 -> returnBook();
-            case 8 -> showByGenre();
-            case 10 -> fullDescription();
-            case 11 -> login();
             case 0 -> { System.out.println("Goodbye."); return true; }
             default -> System.out.println("Unknown option.");
         }
         return false;
     }
+
 
     private void findById() {
         System.out.print("Enter book ID: ");
@@ -157,7 +148,7 @@ public class MyApplication {
         System.out.print("Title: ");
         String title = scanner.nextLine();
 
-        System.out.print("Genre : ");
+        System.out.print("Genre: ");
         String genre = scanner.nextLine();
 
         System.out.print("Author ID (or 0 if none): ");
@@ -167,12 +158,29 @@ public class MyApplication {
         System.out.println(controller.create(title, genre, authorId));
     }
 
+
     private void borrowBook() {
         System.out.print("Book ID: ");
         int bookId = readInt();
 
-        System.out.print("Your name: ");
+        System.out.print("Borrower name: ");
         String name = scanner.nextLine();
+
+        System.out.println(controller.borrowBook(bookId, name));
+    }
+
+
+    private void borrowBookUserAutoName() {
+        System.out.print("Book ID: ");
+        int bookId = readInt();
+
+        String name = SessionContext.getDisplayName();
+        if (name == null || name.isBlank()) {
+
+            System.out.print("Enter your name: ");
+            name = scanner.nextLine().trim();
+            SessionContext.setDisplayName(name);
+        }
 
         System.out.println(controller.borrowBook(bookId, name));
     }
@@ -181,18 +189,6 @@ public class MyApplication {
         System.out.print("Book ID: ");
         int bookId = readInt();
         System.out.println(controller.returnBook(bookId));
-    }
-
-    private void showByGenre() {
-        System.out.print("Genre (Category): ");
-        String genre = scanner.nextLine();
-        System.out.println(controller.showByGenre(genre));
-    }
-
-    private void fullDescription() {
-        System.out.print("Book ID: ");
-        int bookId = readInt();
-        System.out.println(controller.getFullDescription(bookId));
     }
 
     private void login() {
@@ -210,8 +206,17 @@ public class MyApplication {
                 System.out.println("Wrong credentials.\n");
                 continue;
             }
+
             SessionContext.setCurrentUser(user);
-            System.out.println("Logged in as " + user.getUsername() + " (" + user.getRole() + ")");
+
+
+            if (user.getRole() == Role.USER) {
+                System.out.print("Enter your name: ");
+                String name = scanner.nextLine().trim();
+                SessionContext.setDisplayName(name);
+            }
+
+            System.out.println("Logged in as " + user.getUsername());
             break;
         }
     }
