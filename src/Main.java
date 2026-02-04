@@ -1,5 +1,3 @@
-
-
 import controller.BookController;
 import controller.interfaces.IBookController;
 import data.DatabaseConnection;
@@ -8,16 +6,21 @@ import repository.BookRepository;
 import repository.interfaces.IBookRepository;
 
 public class Main {
-
     public static void main(String[] args) {
 
-        IDB db = new DatabaseConnection("jdbc:postgresql://localhost:5432", "postgres", "0000", "bookdb");
+        IDB db = new DatabaseConnection(
+                "jdbc:postgresql://localhost:5432",
+                "postgres",
+                "0000",
+                "bookdb"
+        );
 
         IBookRepository repo = new BookRepository(db);
         IBookController controller = new BookController(repo);
-        MyApplication app = new MyApplication(controller);
 
+        MyApplication app = new MyApplication(controller);
         app.start();
+
         db.close();
     }
 }
