@@ -7,17 +7,24 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection implements IDB {
+
+    private static DatabaseConnection instance;
+
     private final String url;
     private final String user;
     private final String password;
-    public DatabaseConnection(String baseUrl, String user, String password, String dbName) {
+
+    private DatabaseConnection(String baseUrl, String user, String password, String dbName) {
         this.url = baseUrl + "/" + dbName;
         this.user = user;
         this.password = password;
     }
 
-    public static IDB getInstance(String s, String postgres, String number, String bookdb) {
-        return null;
+    public static IDB getInstance(String baseUrl, String user, String password, String dbName) {
+        if (instance == null) {
+            instance = new DatabaseConnection(baseUrl, user, password, dbName);
+        }
+        return instance;
     }
 
     @Override
@@ -30,5 +37,7 @@ public class DatabaseConnection implements IDB {
     }
 
     @Override
-    public void close() {}
+    public void close() {
+
+    }
 }
