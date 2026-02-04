@@ -1,3 +1,4 @@
+import java.sql.Connection;
 
 import controller.BookController;
 import controller.interfaces.IBookController;
@@ -15,7 +16,12 @@ public class Main {
                 "0000",
                 "bookdb"
         );
-
+        if (db == null) {
+            System.out.println("DB is null! Fix DatabaseConnection.");
+            return;
+        } else {
+            System.out.println("DB object created successfully: " + db);
+        }
 
         IBookRepository repo = RepositoryFactory.createBookRepository(db);
         IBookController controller = new BookController(repo);
