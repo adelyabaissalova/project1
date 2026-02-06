@@ -122,7 +122,6 @@ public class BookController implements IBookController {
         }
         return sb.toString();
     }
-
     @Override
     public String borrowBook(int bookId, String borrowerName) {
         if (!Validator.isPositiveId(bookId)) return "Book ID must be positive.";
