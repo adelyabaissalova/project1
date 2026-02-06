@@ -1,41 +1,53 @@
+import controller.AdminController;
 import controller.BookController;
 import controller.CategoryController;
-import controller.interfaces.IBookController;
-import controller.interfaces.ICategoryController;
 import data.DatabaseConnection;
 import data.interfaces.IDB;
 import factory.RepositoryFactory;
+import repository.interfaces.IAdminRepository;
 import repository.interfaces.IBookRepository;
 import repository.interfaces.ICategoryRepository;
+import repository.interfaces.ILoanRepository;
+import repository.interfaces.IUserRepository;
+import security.User;
+
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-
         IDB db = DatabaseConnection.getInstance(
-                "jdbc:postgresql://localhost:5432",
+                "jdbc:postgresql://localhost:5432/bookdb",
                 "postgres",
-                "0000",
-                "bookdb"
+                "0000"
         );
-        if (db == null) {
-            System.out.println("DB is null! Fix DatabaseConnection.");
-            return;
-        } else {
-            System.out.println("DB object created successfully: " + db);
+
+        RepositoryFactory factory = new RepositoryFactory(db);
+
+        IUserRepository userRepo = factory.createUserRepository();
+        IBookRepository bookRepo = factory.createBookRepository();
+        ILoanRepository loanRepo = factory.createLoanRepository();
+        ICategoryRepository categoryRepo = factory.createCategoryRepository();
+        IAdminRepository adminRepo = factory.createAdminRepository();
+
+        try (Scanner sc = new Scanner(System.in)) {
+            MyApplication app = new MyApplication(userRepo);
+
+            User user = app.login(sc);
+            if (user == null) {
+                System.out.println("Exit.");
+                return;
+            }
+
+            BookController bookController =
+                    new BookController(bookRepo, loanRepo, sc, user);
+
+            CategoryController categoryController =
+                    new CategoryController(categoryRepo, sc, user);
+
+            AdminController adminController =
+                    new AdminController(adminRepo, sc, user);
+
+            app.start(sc, bookController, categoryController, adminController, user);
         }
-
-        IBookRepository bookRepo = RepositoryFactory.createBookRepository(db);
-        ICategoryRepository categoryRepo = RepositoryFactory.createCategoryRepository(db);
-
-
-        IBookController bookController = new BookController(bookRepo);
-        ICategoryController categoryController = new CategoryController(categoryRepo);
-
-
-        MyApplication app = new MyApplication(bookController, categoryController);
-        app.start();
-
-
-        db.close();
     }
 }

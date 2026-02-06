@@ -1,31 +1,17 @@
 package util;
 
 public class Validator {
-
-    // Title should not be null and at least 2 characters long
-    public static boolean isValidTitle(String title) {
-        return title != null && title.trim().length() >= 2;
+    public static void requireNotBlank(String value, String field) {
+        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " cannot be empty");
     }
 
-    // ID must be positive
-    public static boolean isValidId(int id) {
-        return id > 0;
-    }
-
-    // Checks if a string is not null, not empty, and not only whitespace
-    public static boolean isNonBlank(String s) {
-        return s != null && !s.trim().isEmpty();
-    }
-
-    // Normalize string: trim and remove extra spaces
-    public static String normalize(String s) {
-        if (s == null) return null;
-        return s.trim().replaceAll("\\s+", " ");
-    }
-
-    // Another method for checking positive IDs (can be same as isValidId)
-    public static boolean isPositiveId(int id) {
-        return id > 0;
+    public static int requirePositiveInt(String value, String field) {
+        try {
+            int x = Integer.parseInt(value);
+            if (x <= 0) throw new IllegalArgumentException(field + " must be > 0");
+            return x;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(field + " must be a number");
+        }
     }
 }
-
