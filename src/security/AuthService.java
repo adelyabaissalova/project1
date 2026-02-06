@@ -1,23 +1,24 @@
 package security;
 
-import java.util.HashMap;
-import java.util.Map;
+import repository.interfaces.IUserRepository;
 
 public class AuthService {
-    private final Map<String, User> users = new HashMap<>();
+    private final IUserRepository users;
+    private final SessionContext session;
 
-    public AuthService() {
-        users.put("Yeldana", new User("Yeldana", "admin123", Role.ADMIN));
-        users.put("Adelya", new User("Adelya", "admin123", Role.ADMIN));
-        users.put("Inkar", new User("Inkar", "admin123", Role.ADMIN));
-        users.put("librarian",  new User("librarian",  "lib123",        Role.LIBRARIAN));
-        users.put("user",       new User("user",       "user123",       Role.USER));
+    public AuthService(IUserRepository users, SessionContext session) {
+        this.users = users;
+        this.session = session;
     }
 
-    public User login(String username, String password) {
-        User u = users.get(username);
-        if (u == null) return null;
-        if (!u.getPassword().equals(password)) return null;
-        return u;
+    public boolean login(String username, String password) {
+        User user = users.login(username, password);
+        if (user == null) return false;
+        session.setCurrentUser(user);
+        return true;
+    }
+
+    public void logout() {
+        session.clear();
     }
 }

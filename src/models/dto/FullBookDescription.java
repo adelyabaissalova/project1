@@ -3,93 +3,55 @@ package models.dto;
 import java.time.LocalDate;
 
 public class FullBookDescription {
-    private int bookId;
-    private String title;
-    private String genre;
-    private String status;
-    private String authorName;
-    private String categoryName;
-    private String borrowedBy;
-    private LocalDate dueDate;
-    private boolean returned;
+    private final int id;
+    private final String title;
+    private final String genre;
+    private final String status;
+    private final String authorName;
+    private final String categoryName;
+    private final String borrowerUsername;
+    private final LocalDate dueDate;
 
     public FullBookDescription(
-            int bookId,
+            int id,
             String title,
             String genre,
             String status,
             String authorName,
             String categoryName,
-            String borrowedBy,
-            LocalDate dueDate,
-            boolean returned
-
+            String borrowerUsername,
+            LocalDate dueDate
     ) {
-        this.bookId = bookId;
+        this.id = id;
         this.title = title;
         this.genre = genre;
         this.status = status;
         this.authorName = authorName;
         this.categoryName = categoryName;
-        this.borrowedBy = borrowedBy;
+        this.borrowerUsername = borrowerUsername;
         this.dueDate = dueDate;
-        this.returned = returned;
     }
 
     @Override
     public String toString() {
         return """
-                Book ID: %d
+                Id: %d
                 Title: %s
                 Genre: %s
                 Status: %s
                 Author: %s
                 Category: %s
-                Borrowed by: %s
-                """.formatted(bookId, title, genre, status,
-                authorName, categoryName,
-                borrowedBy == null ? "—" : borrowedBy);
-    }
-
-    public int getBookId() {
-        return bookId;
-    }
-
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getGenre() {
-        return genre;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public String getAuthorName() {
-        return authorName;
-    }
-
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public String getBorrowedBy() {
-        return borrowedBy;
-    }
-
-    public LocalDate getDueDate() {
-        return dueDate;
-    }
-
-    public boolean isReturned() {
-        return returned;
-    }
-
-    public void getBorrowerName() {
+                Borrower: %s
+                Due date: %s
+                """.formatted(
+                id,
+                title,
+                genre,
+                status,
+                authorName == null ? "-" : authorName,
+                categoryName == null ? "-" : categoryName,
+                borrowerUsername == null ? "-" : borrowerUsername,
+                dueDate == null ? "-" : dueDate.toString()
+        );
     }
 }
-
-

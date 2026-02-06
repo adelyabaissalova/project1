@@ -7,37 +7,25 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection implements IDB {
-
     private static DatabaseConnection instance;
 
     private final String url;
     private final String user;
     private final String password;
 
-    private DatabaseConnection(String baseUrl, String user, String password, String dbName) {
-        this.url = baseUrl + "/" + dbName;
+    private DatabaseConnection(String url, String user, String password) {
+        this.url = url;
         this.user = user;
         this.password = password;
     }
 
-    public static IDB getInstance(String baseUrl, String user, String password, String dbName) {
-        if (instance == null) {
-            instance = new DatabaseConnection(baseUrl, user, password, dbName);
-        }
+    public static synchronized DatabaseConnection getInstance(String url, String user, String password) {
+        if (instance == null) instance = new DatabaseConnection(url, user, password);
         return instance;
     }
 
     @Override
-    public Connection getConnection() {
-        try {
-            return DriverManager.getConnection(url, user, password);
-        } catch (SQLException e) {
-            throw new RuntimeException("DB connection error: " + e.getMessage());
-        }
-    }
-
-    @Override
-    public void close() {
-
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(url, user, password);
     }
 }
