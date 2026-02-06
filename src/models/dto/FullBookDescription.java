@@ -7,37 +7,89 @@ public class FullBookDescription {
     private String title;
     private String genre;
     private String status;
-    private Integer authorId;
     private String authorName;
-
-    private String borrowerName;
+    private String categoryName;
+    private String borrowedBy;
     private LocalDate dueDate;
-    private Boolean returned;
+    private boolean returned;
 
-    public int getBookId() { return bookId; }
-    public void setBookId(int bookId) { this.bookId = bookId; }
+    public FullBookDescription(
+            int bookId,
+            String title,
+            String genre,
+            String status,
+            String authorName,
+            String categoryName,
+            String borrowedBy,
+            LocalDate dueDate,
+            boolean returned
 
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    ) {
+        this.bookId = bookId;
+        this.title = title;
+        this.genre = genre;
+        this.status = status;
+        this.authorName = authorName;
+        this.categoryName = categoryName;
+        this.borrowedBy = borrowedBy;
+        this.dueDate = dueDate;
+        this.returned = returned;
+    }
 
-    public String getGenre() { return genre; }
-    public void setGenre(String genre) { this.genre = genre; }
+    @Override
+    public String toString() {
+        return """
+                Book ID: %d
+                Title: %s
+                Genre: %s
+                Status: %s
+                Author: %s
+                Category: %s
+                Borrowed by: %s
+                """.formatted(bookId, title, genre, status,
+                authorName, categoryName,
+                borrowedBy == null ? "—" : borrowedBy);
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public int getBookId() {
+        return bookId;
+    }
 
-    public Integer getAuthorId() { return authorId; }
-    public void setAuthorId(Integer authorId) { this.authorId = authorId; }
 
-    public String getAuthorName() { return authorName; }
-    public void setAuthorName(String authorName) { this.authorName = authorName; }
+    public String getTitle() {
+        return title;
+    }
 
-    public String getBorrowerName() { return borrowerName; }
-    public void setBorrowerName(String borrowerName) { this.borrowerName = borrowerName; }
+    public String getGenre() {
+        return genre;
+    }
 
-    public LocalDate getDueDate() { return dueDate; }
-    public void setDueDate(LocalDate dueDate) { this.dueDate = dueDate; }
+    public String getStatus() {
+        return status;
+    }
 
-    public Boolean getReturned() { return returned; }
-    public void setReturned(Boolean returned) { this.returned = returned; }
+    public String getAuthorName() {
+        return authorName;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public String getBorrowedBy() {
+        return borrowedBy;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public boolean isReturned() {
+        return returned;
+    }
+
+    public void getBorrowerName() {
+    }
 }
+
+

@@ -1,11 +1,12 @@
-import java.sql.Connection;
-
 import controller.BookController;
+import controller.CategoryController;
 import controller.interfaces.IBookController;
+import controller.interfaces.ICategoryController;
 import data.DatabaseConnection;
 import data.interfaces.IDB;
 import factory.RepositoryFactory;
 import repository.interfaces.IBookRepository;
+import repository.interfaces.ICategoryRepository;
 
 public class Main {
     public static void main(String[] args) {
@@ -23,11 +24,17 @@ public class Main {
             System.out.println("DB object created successfully: " + db);
         }
 
-        IBookRepository repo = RepositoryFactory.createBookRepository(db);
-        IBookController controller = new BookController(repo);
+        IBookRepository bookRepo = RepositoryFactory.createBookRepository(db);
+        ICategoryRepository categoryRepo = RepositoryFactory.createCategoryRepository(db);
 
-        MyApplication app = new MyApplication(controller);
+
+        IBookController bookController = new BookController(bookRepo);
+        ICategoryController categoryController = new CategoryController(categoryRepo);
+
+
+        MyApplication app = new MyApplication(bookController, categoryController);
         app.start();
+
 
         db.close();
     }
