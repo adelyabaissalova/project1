@@ -1,4 +1,5 @@
 import controller.interfaces.IBookController;
+import controller.interfaces.ICategoryController;
 import security.AuthService;
 import security.Role;
 import security.SessionContext;
@@ -8,11 +9,13 @@ import java.util.Scanner;
 
 public class MyApplication {
     private final IBookController controller;
+    private final ICategoryController categoryController;
     private final Scanner scanner;
     private final AuthService authService;
 
-    public MyApplication(IBookController controller) {
+    public MyApplication(IBookController controller, ICategoryController categoryController) {
         this.controller = controller;
+        this.categoryController = categoryController;
         this.scanner = new Scanner(System.in);
         this.authService = new AuthService();
     }
@@ -22,8 +25,8 @@ public class MyApplication {
 
         while (true) {
             Role role = SessionContext.getRole();
-
             int choice;
+
             if (role == Role.ADMIN) {
                 choice = adminMenu();
                 if (handleAdmin(choice)) break;
@@ -44,15 +47,13 @@ public class MyApplication {
         System.out.println("Logged as: " + SessionContext.getCurrentUser().getUsername());
         System.out.println("1. Find book by ID");
         System.out.println("2. Show all books");
-        System.out.println("3. Mark as read");
-        System.out.println("4. Mark as not read");
-        System.out.println("5. Add book");
-        System.out.println("6. Borrow book");
-        System.out.println("7. Return book");
-        System.out.println("8. Show books by genre ");
-        System.out.println("9. Show READ books sorted by title ");
-        System.out.println("10. Get FULL book description ");
-        System.out.println("11. Logout");
+        System.out.println("3. Add book");
+        System.out.println("4. Show books by genre ");
+        System.out.println("5. Show READ books sorted by title");
+        System.out.println("6. Get FULL book description");
+        System.out.println("7. Add category");
+        System.out.println("8. Show all categories");
+        System.out.println("9. Logout");
         System.out.println("0. Exit");
         System.out.print("Choose: ");
         return readInt();
@@ -65,11 +66,11 @@ public class MyApplication {
         System.out.println("2. Show all books");
         System.out.println("3. Mark as read");
         System.out.println("4. Mark as not read");
-        System.out.println("6. Borrow book");
-        System.out.println("7. Return book");
-        System.out.println("8. Show books by genre ");
-        System.out.println("10. Get FULL book description ");
-        System.out.println("11. Logout");
+        System.out.println("5. Borrow book");
+        System.out.println("6. Return book");
+        System.out.println("7. Show books by genre ");
+        System.out.println("8. Get FULL book description ");
+        System.out.println("9. Logout");
         System.out.println("0. Exit");
         System.out.print("Choose: ");
         return readInt();
@@ -80,11 +81,11 @@ public class MyApplication {
         System.out.println("Logged as: " + SessionContext.getCurrentUser().getUsername());
         System.out.println("1. Find book by ID");
         System.out.println("2. Show all books");
-        System.out.println("6. Borrow book");
-        System.out.println("7. Return book");
-        System.out.println("8. Show books by genre ");
-        System.out.println("10. Get FULL book description ");
-        System.out.println("11. Logout");
+        System.out.println("3. Borrow book");
+        System.out.println("4. Return book");
+        System.out.println("5. Show books by genre ");
+        System.out.println("6. Get FULL book description ");
+        System.out.println("7. Logout");
         System.out.println("0. Exit");
         System.out.print("Choose: ");
         return readInt();
@@ -94,32 +95,44 @@ public class MyApplication {
         switch (choice) {
             case 1 -> findById();
             case 2 -> System.out.println(controller.showAll());
-            case 3 -> markRead();
-            case 4 -> markNotRead();
-            case 5 -> addBook();
-            case 6 -> borrowBook();
-            case 7 -> returnBook();
-            case 8 -> showByGenre();
-            case 9 -> System.out.println(controller.showReadSortedByTitle());
-            case 10 -> fullDescription();
-            case 11 -> login();
+            case 3 -> addBook();
+            case 4 -> showByGenre();
+            case 5 -> System.out.println(controller.showReadSortedByTitle());
+            case 6 -> fullDescription();
+            case 7 -> addCategory();
+            case 8 -> showCategories();
+            case 9 -> login();
             case 0 -> { System.out.println("Goodbye."); return true; }
             default -> System.out.println("Unknown option.");
         }
         return false;
     }
 
+    private void showCategories() {
+    }
+
+    private void addCategory() {
+        System.out.print("Category name: ");
+        String name = scanner.nextLine();
+
+        if (!util.Validator.isNonBlank(name)) {
+            System.out.println("Category name cannot be empty.");
+            return;
+        }
+
+        System.out.println(categoryController.create(name));
+    }
     private boolean handleLibrarian(int choice) {
         switch (choice) {
             case 1 -> findById();
             case 2 -> System.out.println(controller.showAll());
             case 3 -> markRead();
             case 4 -> markNotRead();
-            case 6 -> borrowBook();
-            case 7 -> returnBook();
-            case 8 -> showByGenre();
-            case 10 -> fullDescription();
-            case 11 -> login();
+            case 5 -> borrowBook();
+            case 6 -> returnBook();
+            case 7 -> showByGenre();
+            case 8 -> fullDescription();
+            case 9 -> login();
             case 0 -> { System.out.println("Goodbye."); return true; }
             default -> System.out.println("Unknown option.");
         }
@@ -130,11 +143,11 @@ public class MyApplication {
         switch (choice) {
             case 1 -> findById();
             case 2 -> System.out.println(controller.showAll());
-            case 6 -> borrowBook();
-            case 7 -> returnBook();
-            case 8 -> showByGenre();
-            case 10 -> fullDescription();
-            case 11 -> login();
+            case 3 -> borrowBook();
+            case 4 -> returnBook();
+            case 5 -> showByGenre();
+            case 6 -> fullDescription();
+            case 7 -> login();
             case 0 -> { System.out.println("Goodbye."); return true; }
             default -> System.out.println("Unknown option.");
         }
@@ -162,9 +175,17 @@ public class MyApplication {
     private void addBook() {
         System.out.print("Title: ");
         String title = scanner.nextLine();
+        if (!util.Validator.isValidTitle(title)) {
+            System.out.println("Invalid title.");
+            return;
+        }
 
         System.out.print("Genre (Category): ");
         String genre = scanner.nextLine();
+        if (!util.Validator.isNonBlank(genre)) {
+            System.out.println("Genre cannot be empty.");
+            return;
+        }
 
         System.out.print("Author ID (or 0 if none): ");
         int a = readInt();
@@ -217,6 +238,15 @@ public class MyApplication {
                 System.out.println("Wrong credentials.\n");
                 continue;
             }
+
+            // Restrict admin login to specific usernames
+            if (user.getRole() == Role.ADMIN) {
+                if (!u.equals("Inkar") && !u.equals("Adelya") && !u.equals("Yeldana")) {
+                    System.out.println("Access denied. Only specific admins allowed.");
+                    continue;
+                }
+            }
+
             SessionContext.setCurrentUser(user);
             System.out.println("Logged in as " + user.getUsername() + " (" + user.getRole() + ")");
             break;
