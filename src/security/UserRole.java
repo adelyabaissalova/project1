@@ -1,6 +1,6 @@
 package security;
 
-public enum Role {
+public enum UserRole {
     USER,
     LIBRARIAN,
     ADMIN

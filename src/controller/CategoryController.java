@@ -1,79 +1,39 @@
 package controller;
 
-import controller.interfaces.ICategoryController;
 import models.Category;
 import repository.interfaces.ICategoryRepository;
+import security.User;
 import util.Validator;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Scanner;
 
-public class CategoryController implements ICategoryController {
+public class CategoryController {
+    private final ICategoryRepository categories;
+    private final Scanner sc;
+    private final User currentUser;
 
-    private final ICategoryRepository repo;
-
-    public CategoryController(ICategoryRepository repo) {
-        this.repo = repo;
+    public CategoryController(ICategoryRepository categories, Scanner sc, User currentUser) {
+        this.categories = categories;
+        this.sc = sc;
+        this.currentUser = currentUser;
     }
 
-    @Override
-    public String create(String name) {
-        if (name == null || name.isBlank()) {
-            return "Category name can't be empty.";
-        }
-
-        Category category = new Category(name);
-        boolean ok = repo.createCategory(category);
-        return ok ? "Category saved successfully." : "Error creating category.";
+    private void requireStaff() {
+        if (currentUser == null || !currentUser.isStaff()) throw new SecurityException("Access denied: LIBRARIAN/ADMIN only");
     }
 
-    @Override
-    public String showAll() {
-        List<Category> categories = repo.getAllCategories();
-
-        if (categories == null || categories.isEmpty()) {
-            return "No categories found.";
-        }
-
-        // Sort by ID
-        categories = categories.stream()
-                .sorted(Comparator.comparingInt(Category::getId))
-                .collect(Collectors.toList());
-
-        StringBuilder sb = new StringBuilder();
-        for (Category c : categories) {
-            sb.append(c.getId())
-                    .append(" | ")
-                    .append(c.getName())
-                    .append("\n");
-        }
-
-        return sb.toString();
+    public void addCategory() {
+        requireStaff();
+        System.out.print("Category name: ");
+        String name = sc.nextLine();
+        Validator.requireNotBlank(name, "Category name");
+        boolean ok = categories.createCategory(new Category(name));
+        System.out.println(ok ? "Added." : "Failed.");
     }
 
-    @Override
-    public String getById(int id) {
-        if (!Validator.isPositiveId(id)) {
-            return "ID must be positive.";
-        }
-
-        Category category = repo.getCategoryById(id);
-        if (category == null) {
-            return "Category not found.";
-        }
-
-        return "ID: " + category.getId() + "\n" +
-                "Name: " + category.getName();
-    }
-
-    @Override
-    public boolean categoryExists(int id) {
-        return repo.categoryExists(id);
-    }
-
-    @Override
-    public List<Category> getAllCategories() {
-        return repo.getAllCategories();
+    public void showAllCategories() {
+        var list = categories.getAllCategories();
+        if (list.isEmpty()) { System.out.println("No categories."); return; }
+        list.forEach(c -> System.out.printf("%d) %s%n", c.getId(), c.getName()));
     }
 }

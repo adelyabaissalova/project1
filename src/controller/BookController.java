@@ -1,203 +1,196 @@
 package controller;
 
-import controller.interfaces.IBookController;
 import models.Book;
 import models.BookStatus;
 import models.dto.FullBookDescription;
+import models.dto.LoanInfo;
 import repository.interfaces.IBookRepository;
+import repository.interfaces.ILoanRepository;
+import security.User;
 import util.Validator;
 
-import java.util.Comparator;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Scanner;
 
-import static models.BookStatus.*;
+public class BookController {
+    private final IBookRepository books;
+    private final ILoanRepository loans;
+    private final Scanner sc;
+    private final User currentUser;
 
-public class BookController implements IBookController {
-
-    private final IBookRepository repo;
-
-    public BookController(IBookRepository repo) {
-        this.repo = repo;
+    public BookController(IBookRepository books, ILoanRepository loans, Scanner sc, User currentUser) {
+        this.books = books;
+        this.loans = loans;
+        this.sc = sc;
+        this.currentUser = currentUser;
     }
 
-    private static boolean test(Book b) {
-        if (READ != b.getStatus()) {
-            return false;
-        } else {
-            return true;
-        }
+    private void requireLoggedIn() {
+        if (currentUser == null) throw new SecurityException("Access denied");
     }
 
-    @Override
-    public String create(String title, String genre, Integer authorId) {
-        title = Validator.normalize(title);
-        genre = Validator.normalize(genre);
-
-        if (!Validator.isNonBlank(title)) return "Title can't be empty.";
-        if (!Validator.isNonBlank(genre)) return "Genre can't be empty.";
-        if (authorId != null && authorId <= 0) return "Author ID must be positive or 0.";
-
-        Book book = new Book(title, genre, authorId);
-        return repo.createBook(book) ? "Book is saved." : "Error occured.";
+    private void requireStaff() {
+        requireLoggedIn();
+        if (!currentUser.isStaff()) throw new SecurityException("Access denied: LIBRARIAN/ADMIN only");
     }
 
-    @Override
-    public String showAll() {
-        var books = repo.getAllBooks()
-                .stream()
-                .sorted(Comparator.comparingInt(Book::getId))
-                .collect(Collectors.toList());
-
-        return formatBooks(books);
+    public void showAllBooks() {
+        List<Book> list = books.getAllBooks();
+        if (list.isEmpty()) { System.out.println("No books."); return; }
+        list.forEach(b -> System.out.printf("%d) %s | %s | %s%n", b.getId(), b.getTitle(), b.getGenre(), b.getStatus()));
     }
 
-    @Override
-    public String showByGenre(String genre) {
-        genre = Validator.normalize(genre);
-        if (!Validator.isNonBlank(genre)) return "Genre can't be empty.";
-
-        var books = repo.getBooksByGenre(genre);
-        if (books.isEmpty()) return "No books found for genre: " + genre;
-
-        return formatBooks(books);
+    public void showBookById() {
+        System.out.print("Book id: ");
+        int id = Validator.requirePositiveInt(sc.nextLine(), "Book id");
+        Book b = books.getBookById(id);
+        if (b == null) { System.out.println("Not found."); return; }
+        System.out.printf("%d) %s | %s | %s%n", b.getId(), b.getTitle(), b.getGenre(), b.getStatus());
     }
 
-    @Override
-    public String showReadSortedByTitle() {
-        var books = repo.getAllBooks()
-                .stream()
-                .filter(BookController::test)
-                .sorted(Comparator.comparing(Book::getTitle, String.CASE_INSENSITIVE_ORDER))
-                .toList();
-
-        return "No read books found.";
+    public void showByGenre() {
+        System.out.print("Genre: ");
+        String genre = sc.nextLine();
+        Validator.requireNotBlank(genre, "Genre");
+        List<Book> list = books.getBooksByGenre(genre);
+        if (list.isEmpty()) { System.out.println("No books."); return; }
+        list.forEach(b -> System.out.printf("%d) %s | %s | %s%n", b.getId(), b.getTitle(), b.getGenre(), b.getStatus()));
     }
 
-    private String formatBooks(Iterable<Book> books) {
-        StringBuilder sb = new StringBuilder();
-        for (var b : books) {
-            sb.append(b.getId()).append(" | ")
-                    .append(b.getTitle()).append(" | ")
-                    .append(b.getGenre()).append(" | ")
-                    .append(b.getAuthorName()).append(" | ")
-                    .append(b.getStatus()).append("\n");
-        }
-        return sb.toString();
+    public void showByCategoryName() {
+        System.out.print("Category name: ");
+        String name = sc.nextLine();
+        Validator.requireNotBlank(name, "Category name");
+        List<Book> list = books.getBooksByCategoryName(name);
+        if (list.isEmpty()) { System.out.println("No books."); return; }
+        list.forEach(b -> System.out.printf("%d) %s | %s | %s%n", b.getId(), b.getTitle(), b.getGenre(), b.getStatus()));
     }
 
-    @Override
-    public String markRead(int id) {
-        if (!Validator.isPositiveId(id)) return "ID must be positive.";
-        return repo.updateStatus(id, READ) ? "Status is changed." : "Error.";
+    public void fullDescription() {
+        System.out.print("Book id: ");
+        int id = Validator.requirePositiveInt(sc.nextLine(), "Book id");
+        FullBookDescription dto = books.getFullBookDescription(id);
+        if (dto == null) { System.out.println("Not found."); return; }
+        System.out.println(dto);
     }
 
-    @Override
-    public String markNotRead(int id) {
-        if (!Validator.isPositiveId(id)) return "ID must be positive.";
-        return repo.updateStatus(id, NOT_READ) ? "Status is changed." : "Error.";
+    public void showReadSortedByTitle() {
+        List<Book> list = books.getReadBooks();
+        if (list.isEmpty()) { System.out.println("No read books."); return; }
+        list.forEach(b -> System.out.printf("%d) %s | %s%n", b.getId(), b.getTitle(), b.getStatus()));
     }
 
-    @Override
-    public String getById(int id) {
-        if (!Validator.isPositiveId(id)) return "ID must be positive.";
-
-        Book b = repo.getBookById(id);
-        if (b == null) return "Book not found.";
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("ID: ").append(b.getId()).append("\n");
-        sb.append("Title: ").append(b.getTitle()).append("\n");
-        sb.append("Genre: ").append(b.getGenre()).append("\n");
-        sb.append("Author: ").append(b.getAuthorName()).append("\n");
-        sb.append("Status: ").append(b.getStatus()).append("\n");
-
-        if (b.getBorrowerName() != null) {
-            sb.append("Borrowed by: ").append(b.getBorrowerName()).append("\n");
-            sb.append("Due date: ").append(b.getDueDate()).append("\n");
-            sb.append("Returned: false\n");
-        } else {
-            sb.append("Borrowed by: -\n");
-            sb.append("Due date: -\n");
-            sb.append("Returned: -\n");
-        }
-        return sb.toString();
-    }
-    @Override
-    public String borrowBook(int bookId, String borrowerName) {
-        if (!Validator.isPositiveId(bookId)) return "Book ID must be positive.";
-        borrowerName = Validator.normalize(borrowerName);
-        if (!Validator.isNonBlank(borrowerName)) return "Name can't be empty.";
-
-        if (!repo.bookExists(bookId)) return "Book not found.";
-        if (repo.isBookBorrowed(bookId)) return "This book is already borrowed.";
-
-        boolean ok = repo.borrowBook(bookId, borrowerName);
-        if (!ok) return "Error borrowing book.";
-
-        return "Borrowed successfully!\n" + getById(bookId);
+    public void borrowBook() {
+        requireLoggedIn();
+        System.out.print("Book id: ");
+        int id = Validator.requirePositiveInt(sc.nextLine(), "Book id");
+        if (!books.bookExists(id)) { System.out.println("Not found."); return; }
+        boolean ok = loans.borrowBook(id, currentUser.getId());
+        System.out.println(ok ? "Borrowed." : "Cannot borrow (already borrowed).");
     }
 
-    @Override
-    public String returnBook(int bookId) {
-        if (!Validator.isPositiveId(bookId)) return "Book ID must be positive.";
-        if (!repo.bookExists(bookId)) return "Book not found.";
-
-        boolean ok = repo.returnBook(bookId);
-        return ok ? "Returned successfully." : "This book isn't borrowed.";
+    public void returnBook() {
+        requireLoggedIn();
+        System.out.print("Book id: ");
+        int id = Validator.requirePositiveInt(sc.nextLine(), "Book id");
+        boolean ok = loans.returnBookAsUser(id, currentUser.getId());
+        System.out.println(ok ? "Returned." : "You have no active loan for this book.");
     }
 
-    @Override
-    public String getFullDescription(int bookId) {
-        if (!Validator.isPositiveId(bookId)) return "Book ID must be positive.";
-
-        FullBookDescription d = repo.getFullBookDescription(bookId);
-        if (d == null) return "Book not found.";
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("=== FULL BOOK DESCRIPTION (JOIN) ===\n");
-        sb.append("Book ID: ").append(d.getBookId()).append("\n");
-        sb.append("Title: ").append(d.getTitle()).append("\n");
-        sb.append("Genre(Category): ").append(d.getGenre()).append("\n");
-        sb.append("Status: ").append(d.getStatus()).append("\n");
-        sb.append("Author: ").append(d.getAuthorName()).append("\n");
-
-        d.getBorrowerName();
-        sb.append("Borrowed by: -\n");
-        sb.append("Due date: -\n");
-        sb.append("Returned: -\n");
-        return sb.toString();
+    public void myLoans() {
+        requireLoggedIn();
+        List<LoanInfo> list = loans.getLoansByUser(currentUser.getId());
+        if (list.isEmpty()) { System.out.println("No loans."); return; }
+        list.forEach(System.out::println);
     }
 
-    @Override
-    public String changeStatus(int id, BookStatus status) {
-        if (!Validator.isPositiveId(id)) return "ID must be positive.";
+    public void addBook() {
+        requireStaff();
 
-        boolean ok = repo.updateStatus(id, status);
-        return ok ? "Status updated to " + status : "Error updating status.";
+        System.out.print("Title: ");
+        String title = sc.nextLine();
+        Validator.requireNotBlank(title, "Title");
+
+        System.out.print("Genre: ");
+        String genre = sc.nextLine();
+        Validator.requireNotBlank(genre, "Genre");
+
+        System.out.print("Status (AVAILABLE/BORROWED/READ/NOT_READ): ");
+        String s = sc.nextLine();
+        Validator.requireNotBlank(s, "Status");
+        BookStatus status = BookStatus.valueOf(s.trim().toUpperCase());
+
+        System.out.print("Category id (blank if none): ");
+        String cat = sc.nextLine().trim();
+        Integer categoryId = cat.isEmpty() ? null : Validator.requirePositiveInt(cat, "Category id");
+
+        System.out.print("Author id (blank if none): ");
+        String auth = sc.nextLine().trim();
+        Integer authorId = auth.isEmpty() ? null : Validator.requirePositiveInt(auth, "Author id");
+
+        boolean ok = books.createBook(new Book(title, genre, status, categoryId, authorId));
+        System.out.println(ok ? "Added." : "Failed.");
     }
 
-    @Override
-    public String showAvailableBooks() {
-        var books = repo.getAllBooks()
-                .stream()
-                .filter(b -> b.getStatus() == AVAILABLE)
-                .sorted(Comparator.comparing(Book::getTitle))
-                .collect(Collectors.toList());
+    public void editBook() {
+        requireStaff();
 
-        if (books.isEmpty()) return "No available books.";
+        System.out.print("Book id: ");
+        int id = Validator.requirePositiveInt(sc.nextLine(), "Book id");
+        if (books.getBookById(id) == null) { System.out.println("Not found."); return; }
 
-        return formatBooks(books);
+        System.out.print("New title: ");
+        String title = sc.nextLine();
+        Validator.requireNotBlank(title, "Title");
+
+        System.out.print("New genre: ");
+        String genre = sc.nextLine();
+        Validator.requireNotBlank(genre, "Genre");
+
+        System.out.print("Category id (blank if none): ");
+        String cat = sc.nextLine().trim();
+        Integer categoryId = cat.isEmpty() ? null : Validator.requirePositiveInt(cat, "Category id");
+
+        System.out.print("Author id (blank if none): ");
+        String auth = sc.nextLine().trim();
+        Integer authorId = auth.isEmpty() ? null : Validator.requirePositiveInt(auth, "Author id");
+
+        boolean ok = books.updateBook(id, title, genre, categoryId, authorId);
+        System.out.println(ok ? "Updated." : "Failed.");
     }
-    @Override
-    public String showBorrowedBooks() {
-        var books = repo.getAllBooks()
-                .stream()
-                .filter(b -> b.getStatus() == BORROWED)
-                .sorted(Comparator.comparing(Book::getTitle))
-                .collect(Collectors.toList());
 
-        if (books.isEmpty()) return "No borrowed books.";
+    public void setAvailability() {
+        requireStaff();
 
-        return formatBooks(books);
+        System.out.print("Book id: ");
+        int id = Validator.requirePositiveInt(sc.nextLine(), "Book id");
+
+        System.out.print("Status (AVAILABLE/BORROWED): ");
+        String s = sc.nextLine();
+        Validator.requireNotBlank(s, "Status");
+
+        BookStatus st = BookStatus.valueOf(s.trim().toUpperCase());
+        boolean ok = books.setAvailability(id, st);
+        System.out.println(ok ? "Updated." : "Failed.");
+    }
+
+    public void whoBorrowed() {
+        requireStaff();
+
+        System.out.print("Book id: ");
+        int id = Validator.requirePositiveInt(sc.nextLine(), "Book id");
+
+        LoanInfo loan = loans.getActiveLoanByBook(id);
+        System.out.println(loan == null ? "No active loan." : loan.toString());
+    }
+
+    public void forceReturn() {
+        requireStaff();
+
+        System.out.print("Book id: ");
+        int id = Validator.requirePositiveInt(sc.nextLine(), "Book id");
+
+        boolean ok = loans.returnBookAsStaff(id);
+        System.out.println(ok ? "Returned." : "No active loan.");
     }
 }

@@ -1,35 +1,17 @@
 package util;
 
 public class Validator {
-
-    public static boolean isNonBlank(String s) {
-        return s != null && !s.trim().isEmpty();
+    public static void requireNotBlank(String value, String field) {
+        if (value == null || value.trim().isEmpty()) throw new IllegalArgumentException(field + " cannot be empty");
     }
 
-    public static boolean isPositiveId(int id) {
-        return id > 0;
-    }
-
-    public static String normalize(String s) {
-        if (s == null) return null;
-        return s.trim();
-    }
-
-    public static boolean isValidTitle(String title) {
-        if (!isNonBlank(title)) return false;
-        int n = title.trim().length();
-        return n >= 2 && n <= 150;
-    }
-
-    public static boolean isValidName(String name) {
-        if (!isNonBlank(name)) return false;
-        int n = name.trim().length();
-        return n >= 2 && n <= 50;
-    }
-
-    public static boolean isValidGenre(String genre) {
-        if (!isNonBlank(genre)) return false;
-        int n = genre.trim().length();
-        return n >= 2 && n <= 50;
+    public static int requirePositiveInt(String value, String field) {
+        try {
+            int x = Integer.parseInt(value);
+            if (x <= 0) throw new IllegalArgumentException(field + " must be > 0");
+            return x;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(field + " must be a number");
+        }
     }
 }
