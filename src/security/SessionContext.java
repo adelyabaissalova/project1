@@ -11,6 +11,10 @@ public class SessionContext {
         return instance;
     }
 
+    public static Role getRole() {
+        return null;
+    }
+
     public User getCurrentUser() { return currentUser; }
     public void setCurrentUser(User user) { this.currentUser = user; }
     public void clear() { this.currentUser = null; }
